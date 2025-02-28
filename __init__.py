@@ -1,32 +1,25 @@
 from pathlib import Path
 from typing import List, Dict, Optional, Any, Tuple
-
-# Import wrpy components for WordReference translation
 from wrpy import WordReference, get_available_dicts
-
 from albert import *
 
-md_iid: str = "3.0"
-md_version: str = "1.0"
-md_name: str = "WordReference"
-md_description: str = "Translate words using WordReference"
-md_license: str = "MIT"
-md_url: str = "https://github.com/tomsquest/albert-wordreference-plugin"
-md_authors: List[str] = ["@tomsquest"]
-md_lib_dependencies: List[str] = ["wrpy"]
+md_iid = "3.0"
+md_version = "1.0"
+md_name = "WordReference"
+md_description = "Translate words using WordReference"
+md_license = "MIT"
+md_url = "https://github.com/tomsquest/albert-wordreference-plugin"
+md_authors = ["@tomsquest"]
+md_lib_dependencies = ["wrpy"]
 
-plugin_icon: Path = Path(__file__).parent / "wordreference.svg"
+plugin_icon = Path(__file__).parent / "wordreference.svg"
 
 
 class Plugin(PluginInstance, TriggerQueryHandler):
     def __init__(self) -> None:
         PluginInstance.__init__(self)
         TriggerQueryHandler.__init__(self)
-
-        # Get available dictionaries from wrpy
         self.available_dicts: Dict[str, Dict[str, str]] = get_available_dicts()
-
-        # Cache for WordReference instances
         self.wr_instances: Dict[str, WordReference] = {}
 
     def supportsFuzzyMatching(self) -> bool:
@@ -39,15 +32,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         return "w"
 
     def handleTriggerQuery(self, query: Query) -> None:
-        """Handle translation queries"""
-        query_str: str = query.string.strip()
-
-        # Empty query - show usage info
+        query_str = query.string.strip()
         if not query_str:
             self._show_usage(query)
             return
 
-        # Try to parse as "enfr hello" format (language codes followed by text)
         parts: List[str] = query_str.split(maxsplit=1)
         if len(parts) < 2 or len(parts[0]) != 4:
             self._show_usage(query)
@@ -56,16 +45,13 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         lang_pair: str = parts[0].lower()
         text_to_translate: str = parts[1]
 
-        # Check if the language pair is supported
         if lang_pair not in self.available_dicts:
             self._show_invalid_language_pair(query, lang_pair)
             return
 
-        # Perform translation
         self._translate(query, lang_pair, text_to_translate)
 
     def _show_usage(self, query: Query) -> None:
-        """Show usage instructions"""
         query.add(
             StandardItem(
                 id="translator_usage",
@@ -81,7 +67,6 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             )
         )
 
-        # Show some examples
         examples: List[Tuple[str, str]] = [
             ("enfr hello", "English to French"),
             ("fren bonjour", "French to English"),
@@ -108,7 +93,6 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             )
 
     def _show_invalid_language_pair(self, query: Query, lang_pair: str) -> None:
-        """Show error for invalid language pair"""
         query.add(
             StandardItem(
                 id="translator_invalid_pair",
@@ -118,10 +102,9 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             )
         )
 
-        # Show some supported language pairs
         count: int = 0
         for code, details in self.available_dicts.items():
-            if count >= 10:  # Limit to 10 examples
+            if count >= 8:
                 break
 
             # Skip non-working dictionaries mentioned in documentation
@@ -147,29 +130,15 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             count += 1
 
     def _translate(self, query: Query, lang_pair: str, text: str) -> None:
-        """Perform the actual translation using WordReference"""
         try:
-            info(f"Starting translation for '{text}' with language pair '{lang_pair}'")
-
-            # Get or create WordReference instance
             if lang_pair not in self.wr_instances:
-                info(f"Creating new WordReference instance for '{lang_pair}'")
                 self.wr_instances[lang_pair] = WordReference(lang_pair)
 
-            # Get translation
-            info(f"Calling WordReference.translate() for '{text}'")
             result: Optional[Dict[str, Any]] = self.wr_instances[lang_pair].translate(
                 text
             )
 
-            # Log the result structure
-            info(f"Translation result received: {type(result)}")
-            debug(
-                f"Result keys: {result.keys() if result and isinstance(result, dict) else 'None'}"
-            )
-
             if not result or "translations" not in result or not result["translations"]:
-                info(f"No translations found for '{text}'")
                 query.add(
                     StandardItem(
                         id="translator_no_results",
@@ -185,27 +154,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 )
                 return
 
-            # Add result URL as an action
             url: str = result.get("url", "")
-            info(f"Translation URL: {url}")
-
-            # Don't display source info as a separate item
-            # Just log it for debugging
-            info(
-                f"Word: {result['word']} ({result['from_lang']} to {result['to_lang']})"
-            )
-            info(f"Translation URL: {url}")
-
-            # Log translation sections
-            info(f"Processing {len(result['translations'])} translation sections")
-
-            # Process each translation section
             for section_idx, section in enumerate(result["translations"]):
                 section_title: str = section.get("title", f"Section {section_idx + 1}")
-                info(f"Processing section {section_idx + 1}: {section_title}")
 
                 for entry_idx, entry in enumerate(section.get("entries", [])):
-                    # Skip first entry if it's just displaying the original word
                     if (
                         section_idx == 0
                         and entry_idx == 0
@@ -215,30 +168,18 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                         continue
 
                     context: str = entry.get("context", "")
-                    info(f"  Entry {entry_idx + 1} context: {context}")
-
-                    # Get the source word details
                     from_word: Dict[str, str] = entry.get("from_word", {})
                     source: str = from_word.get("source", text)
                     from_grammar: str = from_word.get("grammar", "")
 
-                    # Source examples
                     from_example: str = entry.get("from_example", "")
 
-                    # Process each translation
                     to_words: List[Dict[str, str]] = entry.get("to_word", [])
-                    info(f"  Processing {len(to_words)} translations for this entry")
-
                     for to_idx, to_word in enumerate(to_words):
                         meaning: str = to_word.get("meaning", "")
                         notes: str = to_word.get("notes", "")
                         grammar: str = to_word.get("grammar", "")
 
-                        info(
-                            f"    Translation {to_idx + 1}: '{meaning}' (grammar: {grammar}, notes: {notes})"
-                        )
-
-                        # Format the display text in WordReference style
                         source_with_grammar: str = f"{source}"
                         if from_grammar:
                             source_with_grammar += f" {from_grammar}"
@@ -254,12 +195,10 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                             f"{source_with_grammar} → {target_with_grammar}"
                         )
 
-                        # Format examples for subtext
                         subtext_parts: List[str] = []
                         if context:
                             subtext_parts.append(f"{context}")
 
-                        # Add examples
                         example_parts: List[str] = []
                         if from_example:
                             example_parts.append(from_example)
@@ -278,12 +217,10 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                             else f"{section_title}"
                         )
 
-                        # Create unique ID for this result
                         result_id: str = (
                             f"translator_result_{section_idx}_{entry_idx}_{to_idx}"
                         )
 
-                        # Create the item
                         result_item: StandardItem = StandardItem(
                             id=result_id,
                             text=display_text,
@@ -298,7 +235,6 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                             ],
                         )
 
-                        # Add URL action if available
                         if url:
                             result_item.actions.append(
                                 Action(
@@ -309,10 +245,6 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                             )
 
                         query.add(result_item)
-
-            info(
-                f"Translation for '{text}' completed successfully with {len(query.results) if hasattr(query, 'results') else 'some'} results"
-            )
 
         except Exception as e:
             error_msg: str = f"Translation error: {str(e)}"
