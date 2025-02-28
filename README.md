@@ -69,6 +69,10 @@ The plugin supports all language pairs available on WordReference, including:
 - `iten` - Italian to English
 - And many more...
 
+## Acknowledgements
+
+This plugin relies on the excellent [wrpy library](https://github.com/sdelquin/wrpy), which provides a clean Python interface to WordReference.com's translation service.
+
 ## License
 
 MIT License
