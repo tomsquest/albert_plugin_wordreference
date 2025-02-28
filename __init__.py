@@ -42,9 +42,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             self._show_usage(query)
             return
 
-        lang_pair: str = parts[0].lower()
-        text_to_translate: str = parts[1]
-
+        lang_pair, text_to_translate = parts[0].lower(), parts[1]
         if lang_pair not in self.available_dicts:
             self._show_invalid_language_pair(query, lang_pair)
             return
@@ -102,12 +100,8 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             )
         )
 
-        count: int = 0
-        for code, details in self.available_dicts.items():
-            if count >= 8:
-                break
-
-            # Skip non-working dictionaries mentioned in documentation
+        how_many_examples = 8
+        for code, details in list(self.available_dicts.items())[:how_many_examples]:
             if code in ["esca", "ruen"]:
                 continue
 
@@ -127,17 +121,13 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                     ],
                 )
             )
-            count += 1
 
     def _translate(self, query: Query, lang_pair: str, text: str) -> None:
         try:
             if lang_pair not in self.wr_instances:
                 self.wr_instances[lang_pair] = WordReference(lang_pair)
 
-            result: Optional[Dict[str, Any]] = self.wr_instances[lang_pair].translate(
-                text
-            )
-
+            result = self.wr_instances[lang_pair].translate(text)
             if not result or "translations" not in result or not result["translations"]:
                 query.add(
                     StandardItem(
@@ -171,7 +161,6 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                     from_word: Dict[str, str] = entry.get("from_word", {})
                     source: str = from_word.get("source", text)
                     from_grammar: str = from_word.get("grammar", "")
-
                     from_example: str = entry.get("from_example", "")
 
                     to_words: List[Dict[str, str]] = entry.get("to_word", [])
@@ -180,41 +169,28 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                         notes: str = to_word.get("notes", "")
                         grammar: str = to_word.get("grammar", "")
 
-                        source_with_grammar: str = f"{source}"
-                        if from_grammar:
-                            source_with_grammar += f" {from_grammar}"
-
-                        target_with_grammar: str = f"{meaning}"
-                        if grammar:
-                            target_with_grammar += f" {grammar}"
-
-                        if notes:
-                            target_with_grammar += f" ({notes})"
+                        source_with_grammar: str = f"{source} {from_grammar}".strip()
+                        target_with_grammar: str = (
+                            f"{meaning} {grammar} ({notes})".strip()
+                        )
 
                         display_text: str = (
                             f"{source_with_grammar} → {target_with_grammar}"
                         )
 
-                        subtext_parts: List[str] = []
-                        if context:
-                            subtext_parts.append(f"{context}")
-
-                        example_parts: List[str] = []
-                        if from_example:
-                            example_parts.append(from_example)
-
+                        subtext_parts: List[str] = [context] if context else []
+                        example_parts: List[str] = (
+                            [from_example] if from_example else []
+                        )
                         to_examples: List[str] = entry.get("to_example", [])
                         if to_examples and to_idx < len(to_examples):
-                            example_text: str = to_examples[to_idx]
-                            example_parts.append(example_text)
+                            example_parts.append(to_examples[to_idx])
 
                         if example_parts:
                             subtext_parts.append(" ⟹ ".join(example_parts))
 
                         subtext: str = (
-                            "\n".join(subtext_parts)
-                            if subtext_parts
-                            else f"{section_title}"
+                            "\n".join(subtext_parts) if subtext_parts else section_title
                         )
 
                         result_id: str = (
@@ -247,8 +223,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                         query.add(result_item)
 
         except Exception as e:
-            error_msg: str = f"Translation error: {str(e)}"
-            critical(error_msg)
+            critical(f"Translation error: {str(e)}")
 
             query.add(
                 StandardItem(
