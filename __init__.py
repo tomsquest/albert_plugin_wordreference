@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any
 
 from wrpy import WordReference, get_available_dicts
 
@@ -202,7 +202,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                                 Action(
                                     "copy",
                                     "Copy translation",
-                                    lambda meaning=meaning: setClipboardText(meaning),
+                                    lambda m=meaning: setClipboardText(m),
                                 )
                             ],
                         )
@@ -212,7 +212,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                                 Action(
                                     "open",
                                     "Open in browser",
-                                    lambda url=url: openUrl(url),
+                                    lambda u=url: openUrl(u),
                                 )
                             )
 
