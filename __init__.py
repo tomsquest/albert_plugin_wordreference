@@ -172,18 +172,12 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                         grammar = to_word.get("grammar", "")
 
                         source_with_grammar = f"{source} {from_grammar}".strip()
-                        target_with_grammar = (
-                            f"{meaning} {grammar} ({notes})".strip()
-                        )
+                        target_with_grammar = f"{meaning} {grammar} ({notes})".strip()
 
-                        display_text = (
-                            f"{source_with_grammar} → {target_with_grammar}"
-                        )
+                        display_text = f"{source_with_grammar} → {target_with_grammar}"
 
                         subtext_parts = [context] if context else []
-                        example_parts = (
-                            [from_example] if from_example else []
-                        )
+                        example_parts = [from_example] if from_example else []
                         to_examples: List[str] = entry.get("to_example", [])
                         if to_examples and to_idx < len(to_examples):
                             example_parts.append(to_examples[to_idx])
@@ -225,13 +219,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                         query.add(result_item)
 
         except Exception as e:
-            critical(f"Translation error: {str(e)}")
-
             query.add(
                 StandardItem(
                     id="translator_error",
-                    text="Translation error",
-                    subtext=str(e),
+                    text=str(e),
+                    subtext="",
                     iconUrls=[f"file:{plugin_icon}"],
                     actions=[
                         Action(
@@ -247,9 +239,13 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         return [
             {
                 "type": "label",
-                "text": 'Use `w` trigger followed by language pair and word.\n\nFor example: `wenfr hello` to '
-                        'translate from English to French.\n\n`w` is the default trigger but can be remapped in the '
-                        'Albert settings.',
+                "text": """
+                    Use `w` trigger followed by language pair and word.
+                    \n\n
+                    For example: `wenfr hello` to translate from English to French.
+                    \n\n
+                    `w` is the default trigger but can be remapped in the Albert settings.
+                """,
                 "widget_properties": {"textFormat": "Qt::MarkdownText"},
             },
         ]
