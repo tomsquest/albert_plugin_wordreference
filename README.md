@@ -35,25 +35,25 @@ wget -O ~/.local/share/albert/python/plugins/wordreference/__init__.py https://r
 
    Albert will automatically install the required dependencies.
 
-5. The trigger is `w`, so use it followed by a language pair and word to translate. 
-You can change the trigger in Albert settings.
+5. The trigger is `w ` (w followed by a space), so use it followed by a language pair and word to translate.
+   You can change the trigger in Albert settings.
 
 ## Usage
 
 The format to translate words is:
 
 ```
-w[language_pair] [word]
+w [language_pair] [word]
 ```
 
 Where `language_pair` is a 4-letter code with source and target languages.
 
 ### Examples:
 
-- `wenfr hello` - Translate "hello" from English to French
-- `wfren bonjour` - Translate "bonjour" from French to English
-- `wende computer` - Translate "computer" from English to German
-- `wesen gracias` - Translate "gracias" from Spanish to English
+- `w enfr hello` - Translate "hello" from English to French
+- `w fren bonjour` - Translate "bonjour" from French to English
+- `w ende computer` - Translate "computer" from English to German
+- `w esen gracias` - Translate "gracias" from Spanish to English
 
 ### Supported Language Pairs
 

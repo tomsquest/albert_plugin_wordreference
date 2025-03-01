@@ -31,7 +31,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         pass
 
     def defaultTrigger(self) -> str:
-        return "w"
+        return "w "
 
     def handleTriggerQuery(self, query: Query) -> None:
         query_str = query.string.strip()
@@ -240,11 +240,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             {
                 "type": "label",
                 "text": """
-                    Use `w` trigger followed by language pair and word.
+                    Use `w ` trigger (w followed by a space) followed by language pair and word.
                     \n\n
-                    For example: `wenfr hello` to translate from English to French.
+                    For example: `w enfr hello` to translate from English to French.
                     \n\n
-                    `w` is the default trigger but can be remapped in the Albert settings.
+                    `w ` is the default trigger but can be remapped in the Albert settings.
                 """,
                 "widget_properties": {"textFormat": "Qt::MarkdownText"},
             },
