@@ -1,6 +1,8 @@
 from pathlib import Path
-from typing import List, Dict, Optional, Any, Tuple
+from typing import List, Dict, Any, Tuple
+
 from wrpy import WordReference, get_available_dicts
+
 from albert import *
 
 md_iid = "3.0"
@@ -37,7 +39,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             self._show_usage(query)
             return
 
-        parts: List[str] = query_str.split(maxsplit=1)
+        parts = query_str.split(maxsplit=1)
         if len(parts) < 2 or len(parts[0]) != 4:
             self._show_usage(query)
             return
@@ -65,7 +67,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
             )
         )
 
-        examples: List[Tuple[str, str]] = [
+        examples = [
             ("enfr hello", "English to French"),
             ("fren bonjour", "French to English"),
             ("ende computer", "English to German"),
@@ -144,9 +146,9 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 )
                 return
 
-            url: str = result.get("url", "")
+            url = result.get("url", "")
             for section_idx, section in enumerate(result["translations"]):
-                section_title: str = section.get("title", f"Section {section_idx + 1}")
+                section_title = section.get("title", f"Section {section_idx + 1}")
 
                 for entry_idx, entry in enumerate(section.get("entries", [])):
                     if (
@@ -157,29 +159,29 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                     ):
                         continue
 
-                    context: str = entry.get("context", "")
+                    context = entry.get("context", "")
                     from_word: Dict[str, str] = entry.get("from_word", {})
-                    source: str = from_word.get("source", text)
-                    from_grammar: str = from_word.get("grammar", "")
-                    from_example: str = entry.get("from_example", "")
+                    source = from_word.get("source", text)
+                    from_grammar = from_word.get("grammar", "")
+                    from_example = entry.get("from_example", "")
 
                     to_words: List[Dict[str, str]] = entry.get("to_word", [])
                     for to_idx, to_word in enumerate(to_words):
-                        meaning: str = to_word.get("meaning", "")
-                        notes: str = to_word.get("notes", "")
-                        grammar: str = to_word.get("grammar", "")
+                        meaning = to_word.get("meaning", "")
+                        notes = to_word.get("notes", "")
+                        grammar = to_word.get("grammar", "")
 
-                        source_with_grammar: str = f"{source} {from_grammar}".strip()
-                        target_with_grammar: str = (
+                        source_with_grammar = f"{source} {from_grammar}".strip()
+                        target_with_grammar = (
                             f"{meaning} {grammar} ({notes})".strip()
                         )
 
-                        display_text: str = (
+                        display_text = (
                             f"{source_with_grammar} → {target_with_grammar}"
                         )
 
-                        subtext_parts: List[str] = [context] if context else []
-                        example_parts: List[str] = (
+                        subtext_parts = [context] if context else []
+                        example_parts = (
                             [from_example] if from_example else []
                         )
                         to_examples: List[str] = entry.get("to_example", [])
@@ -189,15 +191,15 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                         if example_parts:
                             subtext_parts.append(" ⟹ ".join(example_parts))
 
-                        subtext: str = (
+                        subtext = (
                             "\n".join(subtext_parts) if subtext_parts else section_title
                         )
 
-                        result_id: str = (
+                        result_id = (
                             f"translator_result_{section_idx}_{entry_idx}_{to_idx}"
                         )
 
-                        result_item: StandardItem = StandardItem(
+                        result_item = StandardItem(
                             id=result_id,
                             text=display_text,
                             subtext=subtext,
@@ -245,12 +247,9 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         return [
             {
                 "type": "label",
-                "text": "WordReference Plugin",
-                "widget_properties": {"textFormat": "Qt::MarkdownText"},
-            },
-            {
-                "type": "label",
-                "text": 'Use "w" trigger followed by language pair and word.\nFor example: "w enfr hello" to translate from English to French.',
+                "text": 'Use `w` trigger followed by language pair and word.\n\nFor example: `wenfr hello` to '
+                        'translate from English to French.\n\n`w` is the default trigger but can be remapped in the '
+                        'Albert settings.',
                 "widget_properties": {"textFormat": "Qt::MarkdownText"},
             },
         ]
